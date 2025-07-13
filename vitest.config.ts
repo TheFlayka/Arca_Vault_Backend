@@ -12,7 +12,11 @@ export default defineConfig({
     name: 'Arca Vault Tests',
     globals: true,
     environment: 'node',
-    include: ['tests/unit/**/*.test.ts', 'tests/integration/**/*.test.ts'],
+    include: [
+      'src/tests/unit/**/*.test.ts',
+      'tests/integration/**/*.test.ts',
+      'src/modules/**/*.test.ts',
+    ],
     watch: true,
     coverage: {
       reporter: ['text', 'json', 'html'],

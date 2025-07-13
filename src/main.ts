@@ -16,9 +16,9 @@ app.use(cors(corsOptions))
 app.use(cookieParser())
 app.use(express.json())
 
-// Routes
-import userRouter from '#modules/users/usersRouter.js'
-app.use(userRouter)
+// Router
+import { routes } from './modules/index.js'
+app.use(routes)
 
 // MongoDB & Server
 import { PORT } from './env.js'
