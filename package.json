@@ -15,6 +15,10 @@
   "license": "MIT",
   "devDependencies": {
     "@eslint/js": "^9.31.0",
+    "@types/bcrypt": "^5.0.2",
+    "@types/cookie-parser": "^1.4.9",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
     "@types/node": "^24.0.13",
     "eslint": "^9.31.0",
     "eslint-config-prettier": "^10.1.5",
@@ -28,9 +32,20 @@
     "vitest": "^3.2.4"
   },
   "imports": {
-    "#src/*": "./src/*"
+    "#src/*": "./src/*",
+    "#shared/*": "./src/shared/*",
+    "#types/*": "./src/types/*",
+    "#modules/*": "./src/modules/*"
   },
   "dependencies": {
-    "dotenv": "^17.2.0"
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.0",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "jwt-decode": "^4.0.0",
+    "mongodb": "^6.17.0",
+    "valibot": "^1.1.0"
   }
 }

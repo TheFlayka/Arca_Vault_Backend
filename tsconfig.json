@@ -12,7 +12,10 @@
     "baseUrl": ".",
     "types": ["vitest/globals"],
     "paths": {
-      "#src/*": ["src/*"]
+      "#src/*": ["src/*"],
+      "#shared/*": ["src/shared/*"],
+      "#types/*": ["src/types/*"],
+      "#modules/*": ["src/modules/*"]
     }
   },
   "include": ["src", "main.ts", "src/tests"],
