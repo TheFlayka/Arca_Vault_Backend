@@ -3,7 +3,7 @@ import { expect, test, describe } from 'vitest'
 
 // Schema from Valibot
 import * as v from 'valibot'
-import { registrationSchema } from '../index.js'
+import { loginSchema, registrationSchema } from '../users.validations.js'
 import { AnyValibotObjectSchema } from '#types/objectSchema.types.js'
 
 // One Function for all tests with validation
@@ -50,4 +50,22 @@ describe('Проверка схемы регистрации пользоват�
     // Valid User with empty surname
     expectValidation(registrationSchema, { ...validUser, surname: '' }, true)
   })
+})
+
+const validUserLogin = {
+  login: 'test',
+  password: '123456',
+}
+
+describe('Проверка схемы логина пользователя', () => {
+  ;(test('Не Валидные', () => {
+    expectValidation(loginSchema, { ...validUserLogin, login: '' }, false)
+    expectValidation(loginSchema, { ...validUserLogin, login: '', password: '' }, false)
+    expectValidation(loginSchema, { ...validUserLogin, login: 'te' }, false)
+    expectValidation(loginSchema, { ...validUserLogin, login: 'te', password: '' }, false)
+    expectValidation(loginSchema, { ...validUserLogin, login: 'te', password: '12345' }, false)
+  }),
+    test('Валидные', () => {
+      expectValidation(loginSchema, validUserLogin, true)
+    }))
 })

@@ -1,13 +1,19 @@
-// Mongo DB & bcrypt
+// Mongo DB & bcrypt & jwt
 import { clientPromise } from '#src/mongodb.js'
 import bcrypt from 'bcrypt'
+import jwt from 'jsonwebtoken'
 
-// Types & Functions Import
+// Types
 import { InsertOneResult } from 'mongodb'
 
-import { sendErrorResponse, sendSuccessResponse } from '#shared/index.js'
 import { AllResponse } from '#types/response.types.js'
-import { IRegisterUser, IUserFromDB, IUserBeforeSend } from './index.js'
+import { IRegisterUser, IUserFromDB, IUserBeforeSend, IUser } from './users.types.js'
+// Tokens
+import { JWT_SECRET_ACCESS, JWT_SECRET_REFRESH } from '#src/env.js'
+
+// Functions
+import { checkOneObject, sendErrorResponse, sendSuccessResponse } from '#shared/index.js'
+import { isSuccess } from '#shared/isSuccess.js'
 
 export const registerUser = async (body: IRegisterUser): Promise<AllResponse> => {
   try {
@@ -35,5 +41,39 @@ export const registerUser = async (body: IRegisterUser): Promise<AllResponse> =>
     return sendSuccessResponse('Пользователь успешно зарегистрирован', 201)
   } catch (error) {
     return sendErrorResponse('Ошибка при регистраций пользователя', 500, error)
+  }
+}
+
+export const loginUser = async (body: IUser): Promise<AllResponse> => {
+  try {
+    const { password, ...reqUser } = body
+    const resultCheck = await checkOneObject('users', reqUser, 'пользователя')
+    if (!isSuccess<IUserFromDB>(resultCheck)) return resultCheck
+
+    const validPassword: boolean = await bcrypt.compare(body.password, resultCheck.data.password)
+    if (!validPassword) return sendErrorResponse('Неправильный пароль', 400)
+
+    const accessToken: string = jwt.sign(
+      {
+        _id: resultCheck.data._id.toString(),
+      },
+      JWT_SECRET_ACCESS,
+      { expiresIn: '15m' }
+    )
+
+    const refreshToken: string = jwt.sign(
+      {
+        _id: resultCheck.data._id.toString(),
+      },
+      JWT_SECRET_REFRESH,
+      { expiresIn: '30d' }
+    )
+
+    return sendSuccessResponse('Пользователь успешно авторизовался', 200, {
+      accessToken,
+      refreshToken,
+    })
+  } catch (error) {
+    return sendErrorResponse('Ошибка при авторизаций пользователя', 500, error)
   }
 }

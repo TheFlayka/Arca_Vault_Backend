@@ -4,12 +4,12 @@ export interface IPatternResponse {
   message: string
 }
 
-export type AllResponse<T = unknown, E = unknown> = IErrorResponse<E> | ISuccessResponse<T>
+export type AllResponse<T = any, E = any> = IErrorResponse<E> | ISuccessResponse<T>
 
-export interface IErrorResponse<E = unknown> extends IPatternResponse {
+export interface IErrorResponse<E = any> extends IPatternResponse {
   errors: E
 }
 
-export interface ISuccessResponse<T = unknown> extends IPatternResponse {
+export interface ISuccessResponse<T = any> extends IPatternResponse {
   data: T
 }

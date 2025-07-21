@@ -17,3 +17,8 @@ export interface IUserBeforeSend extends IRegisterUser {
 export interface IUserFromDB extends IUserBeforeSend {
   _id: ObjectId
 }
+
+export interface IToken {
+  access: string
+  refresh: string
+}

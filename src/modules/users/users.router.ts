@@ -1,5 +1,6 @@
-// Index & Middlewares
-import { registrationSchema, registerUserController } from './index.js'
+// Schemas, Controllers & Middlewares
+import { registrationSchema, loginSchema } from './users.validations.js'
+import { registerUserController, loginUserController } from './users.controllers.js'
 import { createObjectMiddleware, checkBodyMiddleware } from '#shared/index.js'
 
 // Router
@@ -11,6 +12,13 @@ router.post(
   checkBodyMiddleware,
   createObjectMiddleware(registrationSchema),
   registerUserController
+)
+
+router.post(
+  '/api/users/login',
+  checkBodyMiddleware,
+  createObjectMiddleware(loginSchema),
+  loginUserController
 )
 
 export default router
