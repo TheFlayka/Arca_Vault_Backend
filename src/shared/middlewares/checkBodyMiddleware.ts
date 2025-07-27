@@ -9,8 +9,7 @@ export const checkBodyMiddleware = (req: Request, res: Response, next: NextFunct
         .json(sendErrorResponse('Не были получены какие-либо данные. Попробуйте еще раз', 400, []))
     }
     next()
-  } catch (errors) {
-    res.status(500).json(sendErrorResponse('Ошибка при проверке полей', 500, errors))
-    return
+  } catch (error) {
+    res.status(500).json(sendErrorResponse('Ошибка при проверке полей', 500, error))
   }
 }

@@ -4,16 +4,18 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 
 // Types
-import { InsertOneResult } from 'mongodb'
+import { InsertOneResult, ObjectId } from 'mongodb'
 
 import { AllResponse } from '#types/response.types.js'
 import { IRegisterUser, IUserFromDB, IUserBeforeSend, IUser } from './users.types.js'
+
 // Tokens
 import { JWT_SECRET_ACCESS, JWT_SECRET_REFRESH } from '#src/env.js'
 
 // Functions
 import { checkOneObject, sendErrorResponse, sendSuccessResponse } from '#shared/index.js'
 import { isSuccess } from '#shared/isSuccess.js'
+import { decodeJWT } from '#shared/jwtDecode.js'
 
 export const registerUser = async (body: IRegisterUser): Promise<AllResponse> => {
   try {
@@ -53,7 +55,7 @@ export const loginUser = async (body: IUser): Promise<AllResponse> => {
     const validPassword: boolean = await bcrypt.compare(body.password, resultCheck.data.password)
     if (!validPassword) return sendErrorResponse('Неправильный пароль', 400)
 
-    const accessToken: string = jwt.sign(
+    const access: string = jwt.sign(
       {
         _id: resultCheck.data._id.toString(),
       },
@@ -61,7 +63,7 @@ export const loginUser = async (body: IUser): Promise<AllResponse> => {
       { expiresIn: '15m' }
     )
 
-    const refreshToken: string = jwt.sign(
+    const refresh: string = jwt.sign(
       {
         _id: resultCheck.data._id.toString(),
       },
@@ -70,10 +72,29 @@ export const loginUser = async (body: IUser): Promise<AllResponse> => {
     )
 
     return sendSuccessResponse('Пользователь успешно авторизовался', 200, {
-      accessToken,
-      refreshToken,
+      access,
+      refresh,
     })
   } catch (error) {
     return sendErrorResponse('Ошибка при авторизаций пользователя', 500, error)
+  }
+}
+
+export const getUser = async (token: string): Promise<AllResponse> => {
+  try {
+    const resultCheck = await checkOneObject(
+      'users',
+      {
+        _id: ObjectId.createFromHexString(decodeJWT(token)._id),
+      },
+      'пользователя'
+    )
+    if (!isSuccess<IUserFromDB>(resultCheck)) return resultCheck
+
+    const { password, deletedAt, _id, ...userInfo } = resultCheck.data
+
+    return sendSuccessResponse('Данные найдены и получены', 200, userInfo)
+  } catch (error) {
+    return sendErrorResponse('Ошибка при получений данных пользователя', 500, error)
   }
 }
