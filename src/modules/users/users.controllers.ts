@@ -1,8 +1,13 @@
-import { sendErrorResponse } from '#shared/index.js'
+// Express
 import { Request, Response } from 'express'
-import { loginUser, registerUser } from './users.models.js'
-import { isSuccess } from '#shared/isSuccess.js'
+
+// Models & Types
+import { getUser, loginUser, registerUser } from './users.models.js'
 import { IToken } from './users.types.js'
+
+// Shared Functions
+import { sendErrorResponse } from '#shared/index.js'
+import { isSuccess } from '#shared/isSuccess.js'
 
 export const registerUserController = async (req: Request, res: Response) => {
   try {
@@ -40,6 +45,15 @@ export const loginUserController = async (req: Request, res: Response) => {
     const { data, ...resultDone } = result
     res.status(resultDone.status).json(resultDone)
   } catch (error) {
-    res.status(500).json(sendErrorResponse('Ошибка при регистраций пользователя', 500, error))
+    res.status(500).json(sendErrorResponse('Ошибка при авторизаций пользователя', 500, error))
+  }
+}
+
+export const getUserController = async (req: Request, res: Response) => {
+  try {
+    const result = await getUser(req.cookies.accessToken)
+    res.status(result.status).json(result)
+  } catch (error) {
+    res.status(500).json(sendErrorResponse('Ошибка при получений данных пользователя', 500, error))
   }
 }

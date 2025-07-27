@@ -59,11 +59,18 @@ const validUserLogin = {
 
 describe('Проверка схемы логина пользователя', () => {
   ;(test('Не Валидные', () => {
+    // No Login
     expectValidation(loginSchema, { ...validUserLogin, login: '' }, false)
+    // No Login & No Password
     expectValidation(loginSchema, { ...validUserLogin, login: '', password: '' }, false)
+    // Bad login
     expectValidation(loginSchema, { ...validUserLogin, login: 'te' }, false)
+    // Bad Login & No Password
     expectValidation(loginSchema, { ...validUserLogin, login: 'te', password: '' }, false)
+    // Bad Login & Bad Password
     expectValidation(loginSchema, { ...validUserLogin, login: 'te', password: '12345' }, false)
+    // No Login & Bad Password
+    expectValidation(loginSchema, { ...validUserLogin, login: '', password: '12345' }, false)
   }),
     test('Валидные', () => {
       expectValidation(loginSchema, validUserLogin, true)

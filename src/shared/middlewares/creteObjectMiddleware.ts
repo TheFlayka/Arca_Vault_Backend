@@ -27,9 +27,8 @@ export const createObjectMiddleware = <S extends v.ObjectSchema<any, any>>(schem
       }
 
       next()
-    } catch (errors) {
-      res.status(500).json(sendErrorResponse('Ошибка при проверке полей', 500, errors))
-      return
+    } catch (error) {
+      res.status(500).json(sendErrorResponse('Ошибка при проверке полей', 500, error))
     }
   }
 }
