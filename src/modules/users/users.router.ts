@@ -1,9 +1,10 @@
 // Users Schemas & Controllers
-import { registrationSchema, loginSchema } from './users.validations.js'
+import { registrationSchema, loginSchema, optionalRegistrationSchema } from './users.validations.js'
 import {
   registerUserController,
   loginUserController,
   getUserController,
+  changeUserController,
 } from './users.controllers.js'
 
 // Shared Middlewares
@@ -30,5 +31,12 @@ router.post(
 )
 
 router.get('/api/users', checkAccessTokenMiddleware, getUserController)
+router.put(
+  '/api/users',
+  createObjectMiddleware(optionalRegistrationSchema),
+  checkAccessTokenMiddleware,
+  checkBodyMiddleware,
+  changeUserController
+)
 
 export default router
