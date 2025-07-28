@@ -20,3 +20,16 @@ export const registrationSchema = v.object({
 })
 
 export const optionalRegistrationSchema = v.partial(registrationSchema)
+
+export const passwordSchema = v.object({
+  oldPassword: v.pipe(
+    v.string('Старый пароль неправильного формата'),
+    v.minLength(6, 'Минимальная длина старого пароля 6'),
+    v.maxLength(20, 'Максимальная длина старого пароля 20')
+  ),
+  newPassword: v.pipe(
+    v.string('Новый пароль неправильного формата'),
+    v.minLength(6, 'Минимальная длина нового пароля 6'),
+    v.maxLength(20, 'Максимальная длина нового пароля 20')
+  ),
+})

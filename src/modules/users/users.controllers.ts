@@ -2,7 +2,7 @@
 import { Request, Response } from 'express'
 
 // Models & Types
-import { changeUser, getUser, loginUser, registerUser } from './users.models.js'
+import { changePasswordUser, changeUser, getUser, loginUser, registerUser } from './users.models.js'
 import { IToken } from './users.types.js'
 
 // Shared Functions
@@ -61,6 +61,15 @@ export const getUserController = async (req: Request, res: Response) => {
 export const changeUserController = async (req: Request, res: Response) => {
   try {
     const result = await changeUser(req.cookies.accessToken, req.body)
+    res.status(result.status).json(result)
+  } catch (error) {
+    res.status(500).json(sendErrorResponse('Не удалось обновить данные пользователя', 500, error))
+  }
+}
+
+export const changePasswordUserController = async (req: Request, res: Response) => {
+  try {
+    const result = await changePasswordUser(req.cookies.accessToken, req.body)
     res.status(result.status).json(result)
   } catch (error) {
     res.status(500).json(sendErrorResponse('Не удалось обновить данные пользователя', 500, error))

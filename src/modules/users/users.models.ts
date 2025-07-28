@@ -4,7 +4,7 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 
 // Types
-import { ClientUpdateOneModel, InsertOneResult, ObjectId } from 'mongodb'
+import { InsertOneResult, ObjectId } from 'mongodb'
 
 import { AllResponse } from '#types/response.types.js'
 import {
@@ -13,6 +13,7 @@ import {
   IUserBeforeSend,
   IUser,
   UpdateUserObject,
+  IChangePassword,
 } from './users.types.js'
 
 // Tokens
@@ -22,6 +23,7 @@ import { JWT_SECRET_ACCESS, JWT_SECRET_REFRESH } from '#src/env.js'
 import { checkOneObject, sendErrorResponse, sendSuccessResponse } from '#shared/index.js'
 import { isString, isSuccessResponse } from '#shared/isSuccess.js'
 import { decodeJWT } from '#shared/jwtDecode.js'
+import { hashPassword } from '#src/shared/hashPassword.js'
 
 export const registerUser = async (body: IRegisterUser): Promise<AllResponse> => {
   try {
@@ -31,8 +33,7 @@ export const registerUser = async (body: IRegisterUser): Promise<AllResponse> =>
     if (user)
       return sendErrorResponse('Пользователь с таким логином существует, введите другой', 409)
 
-    const salt = await bcrypt.genSalt(10)
-    const passwordHash: string = await bcrypt.hash(body.password, salt)
+    const passwordHash: string = await hashPassword(body.password)
 
     const { password, ...bodyInfo } = body
     const newUser: IUserBeforeSend = {
@@ -138,5 +139,42 @@ export const changeUser = async (token: string, body: UpdateUserObject): Promise
     return sendSuccessResponse('Данные пользователя изменены', 200)
   } catch (error) {
     return sendErrorResponse('Ошибка при получений данных пользователя', 500, error)
+  }
+}
+
+export const changePasswordUser = async (
+  token: string,
+  body: IChangePassword
+): Promise<AllResponse> => {
+  try {
+    const resultCheck = await checkOneObject(
+      'users',
+      {
+        _id: ObjectId.createFromHexString(decodeJWT(token)._id),
+      },
+      'пользователя'
+    )
+    if (!isSuccessResponse<IUserFromDB>(resultCheck)) return resultCheck
+
+    if (body.oldPassword === body.newPassword)
+      return sendErrorResponse('Новый пароль одинаков со старым. введите новый', 400)
+    const validPassword: boolean = await bcrypt.compare(body.oldPassword, resultCheck.data.password)
+    if (!validPassword) return sendErrorResponse('Неправильный пароль', 400)
+
+    const passwordHash: string = await hashPassword(body.newPassword)
+
+    const resultUpdate = await (
+      await clientPromise
+    )
+      .db()
+      .collection('users')
+      .updateOne({ _id: resultCheck.data._id }, { $set: { password: passwordHash } })
+    if (resultUpdate.modifiedCount === 0) {
+      return sendErrorResponse('Нет изменений — пароль не обновлен', 400)
+    }
+
+    return sendSuccessResponse('Пароль пользователя изменен', 200)
+  } catch (error) {
+    return sendErrorResponse('Ошибка при изменений пароля пользователя', 500, error)
   }
 }
