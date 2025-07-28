@@ -12,11 +12,14 @@ export interface IRegisterUser extends IUser {
 
 export interface IUserBeforeSend extends IRegisterUser {
   deletedAt: Date | null
+  passwordChangedAt: Date | null
 }
 
 export interface IUserFromDB extends IUserBeforeSend {
   _id: ObjectId
 }
+
+export type UpdateUserObject = Partial<IRegisterUser>
 
 export interface IToken {
   access: string

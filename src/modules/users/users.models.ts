@@ -4,17 +4,23 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 
 // Types
-import { InsertOneResult, ObjectId } from 'mongodb'
+import { ClientUpdateOneModel, InsertOneResult, ObjectId } from 'mongodb'
 
 import { AllResponse } from '#types/response.types.js'
-import { IRegisterUser, IUserFromDB, IUserBeforeSend, IUser } from './users.types.js'
+import {
+  IRegisterUser,
+  IUserFromDB,
+  IUserBeforeSend,
+  IUser,
+  UpdateUserObject,
+} from './users.types.js'
 
 // Tokens
 import { JWT_SECRET_ACCESS, JWT_SECRET_REFRESH } from '#src/env.js'
 
 // Functions
 import { checkOneObject, sendErrorResponse, sendSuccessResponse } from '#shared/index.js'
-import { isSuccess } from '#shared/isSuccess.js'
+import { isString, isSuccessResponse } from '#shared/isSuccess.js'
 import { decodeJWT } from '#shared/jwtDecode.js'
 
 export const registerUser = async (body: IRegisterUser): Promise<AllResponse> => {
@@ -33,6 +39,7 @@ export const registerUser = async (body: IRegisterUser): Promise<AllResponse> =>
       ...bodyInfo,
       password: passwordHash,
       deletedAt: null,
+      passwordChangedAt: new Date(),
     }
 
     const createResult: InsertOneResult = await usersCollection.insertOne(newUser)
@@ -50,7 +57,7 @@ export const loginUser = async (body: IUser): Promise<AllResponse> => {
   try {
     const { password, ...reqUser } = body
     const resultCheck = await checkOneObject('users', reqUser, 'пользователя')
-    if (!isSuccess<IUserFromDB>(resultCheck)) return resultCheck
+    if (!isSuccessResponse<IUserFromDB>(resultCheck)) return resultCheck
 
     const validPassword: boolean = await bcrypt.compare(body.password, resultCheck.data.password)
     if (!validPassword) return sendErrorResponse('Неправильный пароль', 400)
@@ -89,11 +96,46 @@ export const getUser = async (token: string): Promise<AllResponse> => {
       },
       'пользователя'
     )
-    if (!isSuccess<IUserFromDB>(resultCheck)) return resultCheck
+    if (!isSuccessResponse<IUserFromDB>(resultCheck)) return resultCheck
 
     const { password, deletedAt, _id, ...userInfo } = resultCheck.data
 
     return sendSuccessResponse('Данные найдены и получены', 200, userInfo)
+  } catch (error) {
+    return sendErrorResponse('Ошибка при получений данных пользователя', 500, error)
+  }
+}
+
+export const changeUser = async (token: string, body: UpdateUserObject): Promise<AllResponse> => {
+  try {
+    const resultCheck = await checkOneObject(
+      'users',
+      {
+        _id: ObjectId.createFromHexString(decodeJWT(token)._id),
+      },
+      'пользователя'
+    )
+    if (!isSuccessResponse<IUserFromDB>(resultCheck)) return resultCheck
+    const data = resultCheck.data
+
+    if (body.login) {
+      if (!body.password) return sendErrorResponse('Для изменения login требуется пароль', 400)
+      if (!isString(body.password)) return sendErrorResponse('Пароль неверного формата', 400)
+      const validPassword: boolean = await bcrypt.compare(body.password, resultCheck.data.password)
+      if (!validPassword) return sendErrorResponse('Неправильный пароль', 400)
+    }
+
+    const { password, ...updateBody } = body
+
+    const resultUpdate = await (await clientPromise)
+      .db()
+      .collection('users')
+      .updateOne({ _id: data._id }, { $set: updateBody })
+    if (resultUpdate.modifiedCount === 0) {
+      return sendErrorResponse('Нет изменений — данные не обновлены', 400)
+    }
+
+    return sendSuccessResponse('Данные пользователя изменены', 200)
   } catch (error) {
     return sendErrorResponse('Ошибка при получений данных пользователя', 500, error)
   }

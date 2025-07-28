@@ -2,12 +2,12 @@
 import { Request, Response } from 'express'
 
 // Models & Types
-import { getUser, loginUser, registerUser } from './users.models.js'
+import { changeUser, getUser, loginUser, registerUser } from './users.models.js'
 import { IToken } from './users.types.js'
 
 // Shared Functions
 import { sendErrorResponse } from '#shared/index.js'
-import { isSuccess } from '#shared/isSuccess.js'
+import { isSuccessResponse } from '#shared/isSuccess.js'
 
 export const registerUserController = async (req: Request, res: Response) => {
   try {
@@ -21,7 +21,7 @@ export const registerUserController = async (req: Request, res: Response) => {
 export const loginUserController = async (req: Request, res: Response) => {
   try {
     const result = await loginUser(req.body)
-    if (!isSuccess<IToken>(result))
+    if (!isSuccessResponse<IToken>(result))
       return res.status(result.status).json(sendErrorResponse(result.message, result.status))
 
     const expiryDate30Days = new Date()
@@ -55,5 +55,14 @@ export const getUserController = async (req: Request, res: Response) => {
     res.status(result.status).json(result)
   } catch (error) {
     res.status(500).json(sendErrorResponse('Ошибка при получений данных пользователя', 500, error))
+  }
+}
+
+export const changeUserController = async (req: Request, res: Response) => {
+  try {
+    const result = await changeUser(req.cookies.accessToken, req.body)
+    res.status(result.status).json(result)
+  } catch (error) {
+    res.status(500).json(sendErrorResponse('Не удалось обновить данные пользователя', 500, error))
   }
 }
