@@ -11,6 +11,7 @@ import {
   getUserController,
   changeUserController,
   changePasswordUserController,
+  deleteUserController,
 } from './users.controllers.js'
 
 // Shared Middlewares
@@ -52,5 +53,7 @@ router.put(
   checkBodyMiddleware,
   changePasswordUserController
 )
+
+router.delete('/api/users/', checkAccessTokenMiddleware, deleteUserController)
 
 export default router

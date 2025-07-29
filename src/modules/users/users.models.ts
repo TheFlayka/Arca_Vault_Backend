@@ -168,7 +168,10 @@ export const changePasswordUser = async (
     )
       .db()
       .collection('users')
-      .updateOne({ _id: resultCheck.data._id }, { $set: { password: passwordHash } })
+      .updateOne(
+        { _id: resultCheck.data._id },
+        { $set: { password: passwordHash, passwordChangedAt: new Date() } }
+      )
     if (resultUpdate.modifiedCount === 0) {
       return sendErrorResponse('Нет изменений — пароль не обновлен', 400)
     }
@@ -176,5 +179,29 @@ export const changePasswordUser = async (
     return sendSuccessResponse('Пароль пользователя изменен', 200)
   } catch (error) {
     return sendErrorResponse('Ошибка при изменений пароля пользователя', 500, error)
+  }
+}
+
+export const deleteUser = async (token: string): Promise<AllResponse> => {
+  try {
+    const resultCheck = await checkOneObject(
+      'users',
+      {
+        _id: ObjectId.createFromHexString(decodeJWT(token)._id),
+      },
+      'пользователя'
+    )
+    if (!isSuccessResponse<IUserFromDB>(resultCheck)) return resultCheck
+
+    await (
+      await clientPromise
+    )
+      .db()
+      .collection('users')
+      .updateOne({ _id: resultCheck.data._id }, { $set: { deletedAt: new Date() } })
+
+    return sendSuccessResponse('Пользователь успешно удален', 200)
+  } catch (error) {
+    return sendErrorResponse('Ошибка при удалений пользователя', 500, error)
   }
 }
