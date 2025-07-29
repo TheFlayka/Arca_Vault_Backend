@@ -25,3 +25,8 @@ export interface IToken {
   access: string
   refresh: string
 }
+
+export interface IChangePassword {
+  oldPassword: string
+  newPassword: string
+}
