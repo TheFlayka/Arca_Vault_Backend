@@ -1,5 +1,6 @@
 # Arca Vault (Backend) 
-![logo](https://github.com/user-attachments/assets/60a403ba-09e3-4e79-91e3-e1e9c31d5379)
+<img width="700" height="200" alt="READMEMarkdownBackend" src="https://github.com/user-attachments/assets/a797bab5-6835-4654-9934-1f5297bf0bdd" />
+
 ## Добро пожаловать в репозиторий бэкэнда Arca Vault. 
 
 _(В разделе [Wiki](https://github.com/TheFlayka/Arca_Vault_Backend/wiki) вы найдете больше информаций о репозиторий и бэкэнде)_
