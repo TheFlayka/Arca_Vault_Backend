@@ -8,6 +8,7 @@ import {
   deleteUser,
   getUser,
   loginUser,
+  logoutUser,
   registerUser,
 } from './users.models.js'
 import { IToken } from './users.types.js'
@@ -86,6 +87,19 @@ export const changePasswordUserController = async (req: Request, res: Response) 
 export const deleteUserController = async (req: Request, res: Response) => {
   try {
     const result = await deleteUser(req.cookies.accessToken)
+    res.status(result.status).json(result)
+  } catch (error) {
+    res.status(500).json(sendErrorResponse('Не удалось удалить пользователя', 500, error))
+  }
+}
+
+export const logoutUserController = async (req: Request, res: Response) => {
+  try {
+    const result = await logoutUser(req.cookies.accessToken)
+    if (!result.success) return res.status(result.status).json(result)
+
+    res.clearCookie('accessToken')
+    res.clearCookie('refreshToken')
     res.status(result.status).json(result)
   } catch (error) {
     res.status(500).json(sendErrorResponse('Не удалось удалить пользователя', 500, error))

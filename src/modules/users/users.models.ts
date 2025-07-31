@@ -41,6 +41,7 @@ export const registerUser = async (body: IRegisterUser): Promise<AllResponse> =>
       password: passwordHash,
       deletedAt: null,
       passwordChangedAt: new Date(),
+      userRefreshToken: null,
     }
 
     const createResult: InsertOneResult = await usersCollection.insertOne(newUser)
@@ -79,6 +80,13 @@ export const loginUser = async (body: IUser): Promise<AllResponse> => {
       { expiresIn: '30d' }
     )
 
+    await (
+      await clientPromise
+    )
+      .db()
+      .collection('users')
+      .updateOne({ _id: resultCheck.data._id }, { $set: { userRefreshToken: refresh } })
+
     return sendSuccessResponse('Пользователь успешно авторизовался', 200, {
       access,
       refresh,
@@ -99,7 +107,7 @@ export const getUser = async (token: string): Promise<AllResponse> => {
     )
     if (!isSuccessResponse<IUserFromDB>(resultCheck)) return resultCheck
 
-    const { password, deletedAt, _id, ...userInfo } = resultCheck.data
+    const { password, deletedAt, _id, userRefreshToken, ...userInfo } = resultCheck.data
 
     return sendSuccessResponse('Данные найдены и получены', 200, userInfo)
   } catch (error) {
@@ -203,5 +211,29 @@ export const deleteUser = async (token: string): Promise<AllResponse> => {
     return sendSuccessResponse('Пользователь успешно удален', 200)
   } catch (error) {
     return sendErrorResponse('Ошибка при удалений пользователя', 500, error)
+  }
+}
+
+export const logoutUser = async (token: string): Promise<AllResponse> => {
+  try {
+    const resultCheck = await checkOneObject(
+      'users',
+      {
+        _id: ObjectId.createFromHexString(decodeJWT(token)._id),
+      },
+      'пользователя'
+    )
+    if (!isSuccessResponse<IUserFromDB>(resultCheck)) return resultCheck
+
+    await (
+      await clientPromise
+    )
+      .db()
+      .collection('users')
+      .updateOne({ _id: resultCheck.data._id }, { $set: { userRefreshToken: null } })
+
+    return sendSuccessResponse('Пользователь успешно вышел', 200)
+  } catch (error) {
+    return sendErrorResponse('Ошибка при выходе пользователя', 500, error)
   }
 }

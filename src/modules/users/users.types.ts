@@ -13,6 +13,7 @@ export interface IRegisterUser extends IUser {
 export interface IUserBeforeSend extends IRegisterUser {
   deletedAt: Date | null
   passwordChangedAt: Date | null
+  userRefreshToken: string | null
 }
 
 export interface IUserFromDB extends IUserBeforeSend {
