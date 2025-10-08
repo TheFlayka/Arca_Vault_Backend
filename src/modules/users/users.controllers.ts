@@ -11,10 +11,13 @@ import {
   logoutUser,
   registerUser,
 } from './users.models.js'
-import { IToken } from './users.types.js'
+import { IChangePassword, IToken, IUserFromDB, UpdateUserObject } from './users.types.js'
+
+import { IModuleType } from '#types/module.types.js'
+const module: IModuleType = { type: 'users', case: 'пользователя' }
 
 // Shared Functions
-import { sendErrorResponse } from '#shared/index.js'
+import { newModelFunction, sendErrorResponse } from '#shared/index.js'
 import { isSuccessResponse } from '#shared/isSuccess.js'
 
 export const registerUserController = async (req: Request, res: Response) => {
@@ -59,7 +62,7 @@ export const loginUserController = async (req: Request, res: Response) => {
 
 export const getUserController = async (req: Request, res: Response) => {
   try {
-    const result = await getUser(req.cookies.accessToken)
+    const result = await newModelFunction<IUserFromDB>(getUser, module, req.cookies.accessToken)
     res.status(result.status).json(result)
   } catch (error) {
     res.status(500).json(sendErrorResponse('Ошибка при получений данных пользователя', 500, error))
@@ -68,7 +71,7 @@ export const getUserController = async (req: Request, res: Response) => {
 
 export const changeUserController = async (req: Request, res: Response) => {
   try {
-    const result = await changeUser(req.cookies.accessToken, req.body)
+    const result = await newModelFunction<IUserFromDB, UpdateUserObject>(changeUser, module, req.cookies.accessToken, req.body)
     res.status(result.status).json(result)
   } catch (error) {
     res.status(500).json(sendErrorResponse('Не удалось обновить данные пользователя', 500, error))
@@ -77,7 +80,12 @@ export const changeUserController = async (req: Request, res: Response) => {
 
 export const changePasswordUserController = async (req: Request, res: Response) => {
   try {
-    const result = await changePasswordUser(req.cookies.accessToken, req.body)
+    const result = await newModelFunction<IUserFromDB, IChangePassword>(
+      changePasswordUser,
+      module,
+      req.cookies.accessToken,
+      req.body
+    )
     res.status(result.status).json(result)
   } catch (error) {
     res.status(500).json(sendErrorResponse('Не удалось обновить данные пользователя', 500, error))
@@ -86,7 +94,11 @@ export const changePasswordUserController = async (req: Request, res: Response) 
 
 export const deleteUserController = async (req: Request, res: Response) => {
   try {
-    const result = await deleteUser(req.cookies.accessToken)
+    const result = await newModelFunction<IUserFromDB>(
+      deleteUser,
+      module,
+      req.cookies.accessToken
+    )
     res.status(result.status).json(result)
   } catch (error) {
     res.status(500).json(sendErrorResponse('Не удалось удалить пользователя', 500, error))
@@ -95,7 +107,7 @@ export const deleteUserController = async (req: Request, res: Response) => {
 
 export const logoutUserController = async (req: Request, res: Response) => {
   try {
-    const result = await logoutUser(req.cookies.accessToken)
+    const result = await newModelFunction<IUserFromDB>(logoutUser, module, req.cookies.accessToken)
     if (!result.success) return res.status(result.status).json(result)
 
     res.clearCookie('accessToken')

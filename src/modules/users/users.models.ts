@@ -96,41 +96,22 @@ export const loginUser = async (body: IUser): Promise<AllResponse> => {
   }
 }
 
-export const getUser = async (token: string): Promise<AllResponse> => {
+export const getUser = async (user: IUserFromDB): Promise<AllResponse> => {
   try {
-    const resultCheck = await checkOneObject(
-      'users',
-      {
-        _id: ObjectId.createFromHexString(decodeJWT(token)._id),
-      },
-      'пользователя'
-    )
-    if (!isSuccessResponse<IUserFromDB>(resultCheck)) return resultCheck
-
-    const { password, deletedAt, _id, userRefreshToken, ...userInfo } = resultCheck.data
+    const { password, deletedAt, _id, userRefreshToken, ...userInfo } = user
 
     return sendSuccessResponse('Данные найдены и получены', 200, userInfo)
   } catch (error) {
     return sendErrorResponse('Ошибка при получений данных пользователя', 500, error)
-  }
+  } 
 }
 
-export const changeUser = async (token: string, body: UpdateUserObject): Promise<AllResponse> => {
+export const changeUser = async (user: IUserFromDB, body: UpdateUserObject): Promise<AllResponse> => {
   try {
-    const resultCheck = await checkOneObject(
-      'users',
-      {
-        _id: ObjectId.createFromHexString(decodeJWT(token)._id),
-      },
-      'пользователя'
-    )
-    if (!isSuccessResponse<IUserFromDB>(resultCheck)) return resultCheck
-    const data = resultCheck.data
-
     if (body.login) {
       if (!body.password) return sendErrorResponse('Для изменения login требуется пароль', 400)
       if (!isString(body.password)) return sendErrorResponse('Пароль неверного формата', 400)
-      const validPassword: boolean = await bcrypt.compare(body.password, resultCheck.data.password)
+      const validPassword: boolean = await bcrypt.compare(body.password, user.password)
       if (!validPassword) return sendErrorResponse('Неправильный пароль', 400)
     }
 
@@ -139,7 +120,7 @@ export const changeUser = async (token: string, body: UpdateUserObject): Promise
     const resultUpdate = await (await clientPromise)
       .db()
       .collection('users')
-      .updateOne({ _id: data._id }, { $set: updateBody })
+      .updateOne({ _id: user._id }, { $set: updateBody })
     if (resultUpdate.modifiedCount === 0) {
       return sendErrorResponse('Нет изменений — данные не обновлены', 400)
     }
@@ -151,22 +132,13 @@ export const changeUser = async (token: string, body: UpdateUserObject): Promise
 }
 
 export const changePasswordUser = async (
-  token: string,
+  user: IUserFromDB,
   body: IChangePassword
 ): Promise<AllResponse> => {
   try {
-    const resultCheck = await checkOneObject(
-      'users',
-      {
-        _id: ObjectId.createFromHexString(decodeJWT(token)._id),
-      },
-      'пользователя'
-    )
-    if (!isSuccessResponse<IUserFromDB>(resultCheck)) return resultCheck
-
     if (body.oldPassword === body.newPassword)
       return sendErrorResponse('Новый пароль одинаков со старым. введите новый', 400)
-    const validPassword: boolean = await bcrypt.compare(body.oldPassword, resultCheck.data.password)
+    const validPassword: boolean = await bcrypt.compare(body.oldPassword, user.password)
     if (!validPassword) return sendErrorResponse('Неправильный пароль', 400)
 
     const passwordHash: string = await hashPassword(body.newPassword)
@@ -177,7 +149,7 @@ export const changePasswordUser = async (
       .db()
       .collection('users')
       .updateOne(
-        { _id: resultCheck.data._id },
+        { _id: user._id },
         { $set: { password: passwordHash, passwordChangedAt: new Date() } }
       )
     if (resultUpdate.modifiedCount === 0) {
@@ -190,23 +162,14 @@ export const changePasswordUser = async (
   }
 }
 
-export const deleteUser = async (token: string): Promise<AllResponse> => {
+export const deleteUser = async (user: IUserFromDB): Promise<AllResponse> => {
   try {
-    const resultCheck = await checkOneObject(
-      'users',
-      {
-        _id: ObjectId.createFromHexString(decodeJWT(token)._id),
-      },
-      'пользователя'
-    )
-    if (!isSuccessResponse<IUserFromDB>(resultCheck)) return resultCheck
-
     await (
       await clientPromise
     )
       .db()
       .collection('users')
-      .updateOne({ _id: resultCheck.data._id }, { $set: { deletedAt: new Date() } })
+      .updateOne({ _id: user._id }, { $set: { deletedAt: new Date() } })
 
     return sendSuccessResponse('Пользователь успешно удален', 200)
   } catch (error) {
@@ -214,23 +177,14 @@ export const deleteUser = async (token: string): Promise<AllResponse> => {
   }
 }
 
-export const logoutUser = async (token: string): Promise<AllResponse> => {
+export const logoutUser = async (user: IUserFromDB): Promise<AllResponse> => {
   try {
-    const resultCheck = await checkOneObject(
-      'users',
-      {
-        _id: ObjectId.createFromHexString(decodeJWT(token)._id),
-      },
-      'пользователя'
-    )
-    if (!isSuccessResponse<IUserFromDB>(resultCheck)) return resultCheck
-
     await (
       await clientPromise
     )
       .db()
       .collection('users')
-      .updateOne({ _id: resultCheck.data._id }, { $set: { userRefreshToken: null } })
+      .updateOne({ _id: user._id }, { $set: { userRefreshToken: null } })
 
     return sendSuccessResponse('Пользователь успешно вышел', 200)
   } catch (error) {
