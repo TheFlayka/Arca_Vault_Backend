@@ -9,13 +9,12 @@
     "forceConsistentCasingInFileNames": true,
     "outDir": "dist",
     "rootDir": "./",
-    "baseUrl": ".",
     "types": ["vitest/globals"],
     "paths": {
-      "#src/*": ["src/*"],
-      "#shared/*": ["src/shared/*"],
-      "#types/*": ["src/types/*"],
-      "#modules/*": ["src/modules/*"]
+      "#src/*": ["./src/*"],
+      "#shared/*": ["./src/shared/*"],
+      "#types/*": ["./src/types/*"],
+      "#modules/*": ["./src/modules/*"]
     }
   },
   "include": ["src", "main.ts", "src/tests"],

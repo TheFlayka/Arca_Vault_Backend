@@ -33,8 +33,10 @@ export const checkOneObject = async (
 }
 
 export const newModelFunction = async <TData, TBody = undefined>(
-  fn: (data: TData, body: TBody) => Promise<AllResponse>, module: IModuleType,
-  token: string, body?: TBody
+  fn: (data: TData, body: TBody) => Promise<AllResponse>,
+  module: IModuleType,
+  token: string,
+  body?: TBody
 ) => {
   const resultCheck = await checkOneObject(
     module.type,

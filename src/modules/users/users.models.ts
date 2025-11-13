@@ -4,17 +4,17 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 
 // Types
-import { InsertOneResult, ObjectId } from 'mongodb'
+import { InsertOneResult } from 'mongodb'
 
 import { AllResponse } from '#types/response.types.js'
 import {
   IRegisterUser,
-  IUserFromDB,
   IUserBeforeSend,
   IUser,
   UpdateUserObject,
   IChangePassword,
 } from './users.types.js'
+import { IUserFromDB } from '#modules/common/common.types.js'
 
 // Tokens
 import { JWT_SECRET_ACCESS, JWT_SECRET_REFRESH } from '#src/env.js'
@@ -22,7 +22,6 @@ import { JWT_SECRET_ACCESS, JWT_SECRET_REFRESH } from '#src/env.js'
 // Functions
 import { checkOneObject, sendErrorResponse, sendSuccessResponse } from '#shared/index.js'
 import { isString, isSuccessResponse } from '#shared/isSuccess.js'
-import { decodeJWT } from '#shared/jwtDecode.js'
 import { hashPassword } from '#src/shared/hashPassword.js'
 
 export const registerUser = async (body: IRegisterUser): Promise<AllResponse> => {
@@ -115,6 +114,15 @@ export const changeUser = async (user: IUserFromDB, body: UpdateUserObject): Pro
       if (!validPassword) return sendErrorResponse('Неправильный пароль', 400)
     }
 
+    const usersCollection = (await clientPromise).db().collection<Omit<IUserFromDB, '_id'>>('users')
+    const users: Array<IUserFromDB> = await usersCollection.find().toArray()
+    const userChecking: IUserFromDB | undefined = users.find((user) => user.login === body.login)
+    if(userChecking && userChecking.login === user.login) {
+      return sendErrorResponse('Введен ваш текущий логин, введите другой', 400)
+    }
+    if (userChecking)
+      return sendErrorResponse('Пользователь с таким логином существует, введите другой', 409)
+    
     const { password, ...updateBody } = body
 
     const resultUpdate = await (await clientPromise)
