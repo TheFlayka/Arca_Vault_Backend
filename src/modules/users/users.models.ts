@@ -4,9 +4,10 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 
 // Types
-import { InsertOneResult } from 'mongodb'
+import { ObjectId } from 'mongodb'
 
 import { AllResponse } from '#types/response.types.js'
+
 import {
   IRegisterUser,
   IUserBeforeSend,
@@ -14,6 +15,7 @@ import {
   UpdateUserObject,
   IChangePassword,
 } from './users.types.js'
+
 import { IUserFromDB } from '#modules/common/common.types.js'
 
 // Tokens
@@ -22,13 +24,15 @@ import { JWT_SECRET_ACCESS, JWT_SECRET_REFRESH } from '#src/env.js'
 // Functions
 import { checkOneObject, sendErrorResponse, sendSuccessResponse } from '#shared/index.js'
 import { isString, isSuccessResponse } from '#shared/isSuccess.js'
-import { hashPassword } from '#src/shared/hashPassword.js'
+import { hashPassword } from '#shared/hashPassword.js'
+import { decodeJWT } from '#shared/jwtDecode.js'
 
 export const registerUser = async (body: IRegisterUser): Promise<AllResponse> => {
   try {
-    const usersCollection = (await clientPromise).db().collection<Omit<IUserFromDB, '_id'>>('users')
-    const users: Array<IUserFromDB> = await usersCollection.find().toArray()
-    const user: IUserFromDB | undefined = users.find((user) => user.login === body.login)
+    const user = await (await clientPromise)
+      .db()
+      .collection<IUserFromDB>('users')
+      .findOne({ login: body.login })
     if (user)
       return sendErrorResponse('Пользователь с таким логином существует, введите другой', 409)
 
@@ -43,10 +47,7 @@ export const registerUser = async (body: IRegisterUser): Promise<AllResponse> =>
       userRefreshToken: null,
     }
 
-    const createResult: InsertOneResult = await usersCollection.insertOne(newUser)
-    if (!createResult.acknowledged || !createResult.insertedId) {
-      return sendErrorResponse('Не удалось создать пользователя', 500)
-    }
+    await (await clientPromise).db().collection('users').insertOne(newUser)
 
     return sendSuccessResponse('Пользователь успешно зарегистрирован', 201)
   } catch (error) {
@@ -95,18 +96,35 @@ export const loginUser = async (body: IUser): Promise<AllResponse> => {
   }
 }
 
-export const getUser = async (user: IUserFromDB): Promise<AllResponse> => {
+export const getUser = async (token: string): Promise<AllResponse> => {
   try {
+    const user = await (
+      await clientPromise
+    )
+      .db()
+      .collection<IUserFromDB>('users')
+      .findOne({ _id: ObjectId.createFromHexString(decodeJWT(token)._id), deletedAt: null })
+
+    if (!user) throw sendErrorResponse('Пользователь не найден', 404)
     const { password, deletedAt, _id, userRefreshToken, ...userInfo } = user
 
     return sendSuccessResponse('Данные найдены и получены', 200, userInfo)
   } catch (error) {
     return sendErrorResponse('Ошибка при получений данных пользователя', 500, error)
-  } 
+  }
 }
 
-export const changeUser = async (user: IUserFromDB, body: UpdateUserObject): Promise<AllResponse> => {
+export const changeUser = async (token: string, body: UpdateUserObject): Promise<AllResponse> => {
   try {
+    const user = await (
+      await clientPromise
+    )
+      .db()
+      .collection<IUserFromDB>('users')
+      .findOne({ _id: ObjectId.createFromHexString(decodeJWT(token)._id), deletedAt: null })
+
+    if (!user) throw sendErrorResponse('Пользователь не найден', 404)
+
     if (body.login) {
       if (!body.password) return sendErrorResponse('Для изменения login требуется пароль', 400)
       if (!isString(body.password)) return sendErrorResponse('Пароль неверного формата', 400)
@@ -117,12 +135,12 @@ export const changeUser = async (user: IUserFromDB, body: UpdateUserObject): Pro
     const usersCollection = (await clientPromise).db().collection<Omit<IUserFromDB, '_id'>>('users')
     const users: Array<IUserFromDB> = await usersCollection.find().toArray()
     const userChecking: IUserFromDB | undefined = users.find((user) => user.login === body.login)
-    if(userChecking && userChecking.login === user.login) {
+    if (userChecking && userChecking.login === user.login) {
       return sendErrorResponse('Введен ваш текущий логин, введите другой', 400)
     }
     if (userChecking)
       return sendErrorResponse('Пользователь с таким логином существует, введите другой', 409)
-    
+
     const { password, ...updateBody } = body
 
     const resultUpdate = await (await clientPromise)

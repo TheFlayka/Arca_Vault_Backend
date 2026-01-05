@@ -21,6 +21,7 @@ import { checkAccessTokenMiddleware } from '#shared/middlewares/checkTokenMiddle
 
 // Router
 import { Router } from 'express'
+import { checkUserMiddleware } from '#src/shared/middlewares/checkUserMiddleware.js'
 
 const router = Router()
 
@@ -38,7 +39,7 @@ router.post(
   loginUserController
 )
 
-router.get('/api/users', checkAccessTokenMiddleware, getUserController)
+router.get('/api/users', checkAccessTokenMiddleware, checkUserMiddleware, getUserController)
 router.put(
   '/api/users',
   createObjectMiddleware(optionalRegistrationSchema),
