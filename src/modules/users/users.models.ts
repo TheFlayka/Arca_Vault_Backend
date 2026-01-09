@@ -14,9 +14,8 @@ import {
   IUser,
   UpdateUserObject,
   IChangePassword,
+  IUserFromDB
 } from './users.types.js'
-
-import { IUserFromDB } from '#modules/common/common.types.js'
 
 // Tokens
 import { JWT_SECRET_ACCESS, JWT_SECRET_REFRESH } from '#src/env.js'
@@ -105,7 +104,7 @@ export const getUser = async (token: string): Promise<AllResponse> => {
       .collection<IUserFromDB>('users')
       .findOne({ _id: ObjectId.createFromHexString(decodeJWT(token)._id), deletedAt: null })
 
-    if (!user) throw sendErrorResponse('Пользователь не найден', 404)
+    if (!user) return sendErrorResponse('Пользователь не найден', 404)
     const { password, deletedAt, _id, userRefreshToken, ...userInfo } = user
 
     return sendSuccessResponse('Данные найдены и получены', 200, userInfo)
@@ -123,7 +122,7 @@ export const changeUser = async (token: string, body: UpdateUserObject): Promise
       .collection<IUserFromDB>('users')
       .findOne({ _id: ObjectId.createFromHexString(decodeJWT(token)._id), deletedAt: null })
 
-    if (!user) throw sendErrorResponse('Пользователь не найден', 404)
+    if (!user) return sendErrorResponse('Пользователь не найден', 404)
 
     if (body.login) {
       if (!body.password) return sendErrorResponse('Для изменения login требуется пароль', 400)
@@ -132,14 +131,15 @@ export const changeUser = async (token: string, body: UpdateUserObject): Promise
       if (!validPassword) return sendErrorResponse('Неправильный пароль', 400)
     }
 
-    const usersCollection = (await clientPromise).db().collection<Omit<IUserFromDB, '_id'>>('users')
-    const users: Array<IUserFromDB> = await usersCollection.find().toArray()
-    const userChecking: IUserFromDB | undefined = users.find((user) => user.login === body.login)
-    if (userChecking && userChecking.login === user.login) {
-      return sendErrorResponse('Введен ваш текущий логин, введите другой', 400)
-    }
-    if (userChecking)
-      return sendErrorResponse('Пользователь с таким логином существует, введите другой', 409)
+    if (body.login === user.login) return sendErrorResponse('Новый логин совпадает со старым', 400)
+
+    const loginExists = await (
+      await clientPromise
+    )
+      .db()
+      .collection<IUserFromDB>('users')
+      .findOne({ login: body.login }, { projection: { _id: 1 } })
+    if (loginExists) return sendErrorResponse('Пользователь с таким логином  уже существует', 409)
 
     const { password, ...updateBody } = body
 
@@ -158,12 +158,21 @@ export const changeUser = async (token: string, body: UpdateUserObject): Promise
 }
 
 export const changePasswordUser = async (
-  user: IUserFromDB,
+  token: string,
   body: IChangePassword
 ): Promise<AllResponse> => {
   try {
+    const user = await (
+      await clientPromise
+    )
+      .db()
+      .collection<IUserFromDB>('users')
+      .findOne({ _id: ObjectId.createFromHexString(decodeJWT(token)._id), deletedAt: null })
+
+    if (!user) return sendErrorResponse('Пользователь не найден', 404)
+
     if (body.oldPassword === body.newPassword)
-      return sendErrorResponse('Новый пароль одинаков со старым. введите новый', 400)
+      return sendErrorResponse('Новый пароль совпадает со старым', 400)
     const validPassword: boolean = await bcrypt.compare(body.oldPassword, user.password)
     if (!validPassword) return sendErrorResponse('Неправильный пароль', 400)
 
@@ -188,8 +197,17 @@ export const changePasswordUser = async (
   }
 }
 
-export const deleteUser = async (user: IUserFromDB): Promise<AllResponse> => {
+export const deleteUser = async (token: string): Promise<AllResponse> => {
   try {
+    const user = await (
+      await clientPromise
+    )
+      .db()
+      .collection<IUserFromDB>('users')
+      .findOne({ _id: ObjectId.createFromHexString(decodeJWT(token)._id), deletedAt: null })
+
+    if (!user) return sendErrorResponse('Пользователь не найден', 404)
+
     await (
       await clientPromise
     )
@@ -203,8 +221,17 @@ export const deleteUser = async (user: IUserFromDB): Promise<AllResponse> => {
   }
 }
 
-export const logoutUser = async (user: IUserFromDB): Promise<AllResponse> => {
+export const logoutUser = async (token: string): Promise<AllResponse> => {
   try {
+    const user = await (
+      await clientPromise
+    )
+      .db()
+      .collection<IUserFromDB>('users')
+      .findOne({ _id: ObjectId.createFromHexString(decodeJWT(token)._id), deletedAt: null })
+
+    if (!user) throw sendErrorResponse('Пользователь не найден', 404)
+
     await (
       await clientPromise
     )

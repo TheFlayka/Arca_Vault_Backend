@@ -1,3 +1,5 @@
+import { ObjectId } from 'mongodb'
+
 export interface IUser {
   login: string
   password: string
@@ -24,4 +26,8 @@ export interface IToken {
 export interface IChangePassword {
   oldPassword: string
   newPassword: string
+}
+
+export interface IUserFromDB extends IUserBeforeSend {
+  _id: ObjectId
 }

@@ -18,10 +18,11 @@ import {
 // Shared Middlewares
 import { createObjectMiddleware, checkBodyMiddleware } from '#shared/index.js'
 import { checkAccessTokenMiddleware } from '#shared/middlewares/checkTokenMiddleware.js'
+import { checkUserMiddleware } from '#shared/middlewares/checkUserMiddleware.js'
 
 // Router
 import { Router } from 'express'
-import { checkUserMiddleware } from '#src/shared/middlewares/checkUserMiddleware.js'
+
 
 const router = Router()
 

@@ -1,7 +1,7 @@
 // Express
 import { Request, Response } from 'express'
 
-// Models & Types
+// Models
 import {
   changePasswordUser,
   changeUser,
@@ -12,11 +12,11 @@ import {
   registerUser,
 } from './users.models.js'
 
-import { IChangePassword, IToken, UpdateUserObject } from './users.types.js'
-import { IUserFromDB, moduleUser } from '#modules/common/common.types.js'
+// Types
+import { IToken } from './users.types.js'
 
 // Shared Functions
-import { newModelFunction, sendErrorResponse } from '#shared/index.js'
+import { sendErrorResponse } from '#shared/index.js'
 import { isSuccessResponse } from '#shared/isSuccess.js'
 
 export const registerUserController = async (req: Request, res: Response) => {
@@ -79,12 +79,7 @@ export const changeUserController = async (req: Request, res: Response) => {
 
 export const changePasswordUserController = async (req: Request, res: Response) => {
   try {
-    const result = await newModelFunction<IUserFromDB, IChangePassword>(
-      changePasswordUser,
-      moduleUser,
-      req.cookies.accessToken,
-      req.body
-    )
+    const result = await changePasswordUser(req.cookies.accessToken, req.body)
     res.status(result.status).json(result)
   } catch (error) {
     res.status(500).json(sendErrorResponse('Не удалось обновить данные пользователя', 500, error))
@@ -93,11 +88,7 @@ export const changePasswordUserController = async (req: Request, res: Response) 
 
 export const deleteUserController = async (req: Request, res: Response) => {
   try {
-    const result = await newModelFunction<IUserFromDB>(
-      deleteUser,
-      moduleUser,
-      req.cookies.accessToken
-    )
+    const result = await deleteUser(req.cookies.accessToken)
     res.status(result.status).json(result)
   } catch (error) {
     res.status(500).json(sendErrorResponse('Не удалось удалить пользователя', 500, error))
@@ -106,11 +97,7 @@ export const deleteUserController = async (req: Request, res: Response) => {
 
 export const logoutUserController = async (req: Request, res: Response) => {
   try {
-    const result = await newModelFunction<IUserFromDB>(
-      logoutUser,
-      moduleUser,
-      req.cookies.accessToken
-    )
+    const result = await logoutUser(req.cookies.accessToken)
     if (!result.success) return res.status(result.status).json(result)
 
     res.clearCookie('accessToken')

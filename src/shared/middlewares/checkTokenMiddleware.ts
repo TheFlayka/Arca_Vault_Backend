@@ -1,6 +1,9 @@
+// Express & JWT
 import { NextFunction, Request, Response } from 'express'
-import { sendErrorResponse } from '../response/sendResponse.js'
 import jwt, { VerifyErrors } from 'jsonwebtoken'
+// Response Function
+import { sendErrorResponse } from '../response/sendResponse.js'
+// Env Secrets
 import { JWT_SECRET_ACCESS, JWT_SECRET_REFRESH } from '#src/env.js'
 
 export const checkAccessTokenMiddleware = (req: Request, res: Response, next: NextFunction) => {
