@@ -6,19 +6,23 @@ import { createMoneyboxSchema } from './moneybox.validations.js'
 import { checkAccessTokenMiddleware } from '#shared/middlewares/checkTokenMiddleware.js'
 import { checkUserMiddleware } from '#shared/middlewares/checkUserMiddleware.js'
 // Controllers
-import { createMoneyboxController } from './moneybox.controller.js'
+import { createMoneyboxController, deleteMoneyboxController, getMoneyboxesController } from './moneybox.controller.js'
 
 // Router
 import { Router } from 'express'
 const router = Router()
 
+router.use(checkAccessTokenMiddleware)
+router.use(checkUserMiddleware)
+
 router.post(
   '/api/moneybox',
-  checkAccessTokenMiddleware,
   checkBodyMiddleware,
   createObjectMiddleware(createMoneyboxSchema),
-  checkUserMiddleware,
   createMoneyboxController
 )
+
+router.get('/api/moneybox', getMoneyboxesController)
+router.delete('/api/moneybox/:id', deleteMoneyboxController)
 
 export default router
