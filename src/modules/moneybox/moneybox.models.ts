@@ -71,8 +71,7 @@ export const deleteMoneybox = async (token: string, moneyboxId: string): Promise
         user: ObjectId.createFromHexString(decodeJWT(token)._id),
         _id: ObjectId.createFromHexString(moneyboxId),
       })
-    if (!moneybox)
-      return sendErrorResponse('Копилка не найдена', 404)
+    if (!moneybox) return sendErrorResponse('Копилка не найдена', 404)
     if (moneybox.deletedAt !== null) {
       return sendErrorResponse('Копилка уже удалена', 409)
     }
@@ -93,5 +92,40 @@ export const deleteMoneybox = async (token: string, moneyboxId: string): Promise
     return sendSuccessResponse('Копилки успешно удалена', 200)
   } catch (error) {
     return sendErrorResponse('Ошибка при удалений копилки', 500, error)
+  }
+}
+
+export const restoreMoneybox = async (token: string, moneyboxId: string): Promise<AllResponse> => {
+  try {
+    const moneybox = await (
+      await clientPromise
+    )
+      .db()
+      .collection<IMoneyboxFromDB>('moneybox')
+      .findOne({
+        user: ObjectId.createFromHexString(decodeJWT(token)._id),
+        _id: ObjectId.createFromHexString(moneyboxId),
+      })
+    if (!moneybox) return sendErrorResponse('Копилка не найдена', 404)
+    if (moneybox.deletedAt === null) {
+      return sendErrorResponse('Копилка не удалена', 409)
+    }
+
+    await (
+      await clientPromise
+    )
+      .db()
+      .collection('moneybox')
+      .updateOne(
+        {
+          user: ObjectId.createFromHexString(decodeJWT(token)._id),
+          _id: ObjectId.createFromHexString(moneyboxId),
+        },
+        { $set: { deletedAt: null } }
+      )
+
+    return sendSuccessResponse('Копилки успешно восстановлена', 200)
+  } catch (error) {
+    return sendErrorResponse('Ошибка при восстановлений копилки', 500, error)
   }
 }
