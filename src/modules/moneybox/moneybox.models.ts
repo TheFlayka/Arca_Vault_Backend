@@ -129,3 +129,24 @@ export const restoreMoneybox = async (token: string, moneyboxId: string): Promis
     return sendErrorResponse('Ошибка при восстановлений копилки', 500, error)
   }
 }
+
+export const getMoneybox = async (token: string, moneyboxId: string): Promise<AllResponse> => {
+  try {
+    const moneybox = await (
+      await clientPromise
+    )
+      .db()
+      .collection<IMoneyboxFromDB>('moneybox')
+      .findOne(
+        {
+          user: ObjectId.createFromHexString(decodeJWT(token)._id),
+          _id: ObjectId.createFromHexString(moneyboxId),
+        },
+        { projection: { user: 0 } }
+      )
+      
+    return sendSuccessResponse('Копилка успешно найдены', 200, moneybox)
+  } catch (error) {
+    return sendErrorResponse('Ошибка при поиске копилки', 500, error)
+  }
+}
