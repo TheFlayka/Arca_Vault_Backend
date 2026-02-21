@@ -144,9 +144,41 @@ export const getMoneybox = async (token: string, moneyboxId: string): Promise<Al
         },
         { projection: { user: 0 } }
       )
-      
+
     return sendSuccessResponse('Копилка успешно найдены', 200, moneybox)
   } catch (error) {
     return sendErrorResponse('Ошибка при поиске копилки', 500, error)
+  }
+}
+
+export const updateMoneybox = async (token: string, moneyboxId: string, data: IMoneybox): Promise<AllResponse> => {
+  try {
+     const moneybox = await (
+       await clientPromise
+     )
+       .db()
+       .collection<IMoneyboxFromDB>('moneybox')
+       .findOne({
+         user: ObjectId.createFromHexString(decodeJWT(token)._id),
+         _id: ObjectId.createFromHexString(moneyboxId),
+       })
+     if (!moneybox || moneybox.deletedAt !== null) return sendErrorResponse('Копилка не найдена', 404)
+      
+     await (
+       await clientPromise
+     )
+       .db()
+       .collection('moneybox')
+       .updateOne(
+         {
+           user: ObjectId.createFromHexString(decodeJWT(token)._id),
+           _id: ObjectId.createFromHexString(moneyboxId),
+         },
+         { $set: data }
+       )
+
+    return sendSuccessResponse('Копилка успешно обновлена', 200)
+  } catch (error) {
+    return sendErrorResponse('Ошибка при обновлении копилки', 500, error)
   }
 }

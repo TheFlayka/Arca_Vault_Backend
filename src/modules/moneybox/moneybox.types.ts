@@ -1,7 +1,7 @@
-import { ObjectId } from "mongodb"
+import { ObjectId } from 'mongodb'
 
 export interface IMoneybox {
-  name: string, 
+  name: string
   targetGoal: number
 }
 

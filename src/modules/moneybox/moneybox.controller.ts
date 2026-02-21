@@ -11,6 +11,7 @@ import {
   getMoneybox,
   getMoneyboxes,
   restoreMoneybox,
+  updateMoneybox,
 } from './moneybox.models.js'
 
 export const createMoneyboxController = async (req: Request, res: Response) => {
@@ -55,5 +56,14 @@ export const getMoneyboxController = async (req: Request, res: Response) => {
     res.status(result.status).json(result)
   } catch (error) {
     res.status(500).json(sendErrorResponse('Ошибка при поиске копилки', 500, error))
+  }
+}
+
+export const updateMoneyboxController = async (req: Request, res: Response) => {
+  try {
+    const result = await updateMoneybox(req.cookies.accessToken, req.params.id, req.body)
+    res.status(result.status).json(result)
+  } catch (error) {
+    res.status(500).json(sendErrorResponse('Ошибка при обновлении копилки', 500, error))
   }
 }
