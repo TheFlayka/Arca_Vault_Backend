@@ -12,7 +12,7 @@ interface IErrorIssue {
 }
 
 // Middleware Function
-export const createObjectMiddleware = <S extends v.ObjectSchema<any, any>>(schema: S) => {
+export const validationMiddleware = <S extends v.ObjectSchema<any, any>>(schema: S) => {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
       const resultValidation: typeParseResult = v.safeParse(schema, req.body)

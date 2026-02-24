@@ -16,7 +16,7 @@ import {
 } from './users.controllers.js'
 
 // Shared Middlewares
-import { createObjectMiddleware, checkBodyMiddleware } from '#shared/index.js'
+import { validationMiddleware, checkBodyMiddleware } from '#shared/index.js'
 import { checkAccessTokenMiddleware } from '#shared/middlewares/checkTokenMiddleware.js'
 import { checkUserMiddleware } from '#shared/middlewares/checkUserMiddleware.js'
 
@@ -29,21 +29,21 @@ const router = Router()
 router.post(
   '/api/users',
   checkBodyMiddleware,
-  createObjectMiddleware(registrationSchema),
+  validationMiddleware(registrationSchema),
   registerUserController
 )
 
 router.post(
   '/api/users/login',
   checkBodyMiddleware,
-  createObjectMiddleware(loginSchema),
+  validationMiddleware(loginSchema),
   loginUserController
 )
 
 router.get('/api/users', checkAccessTokenMiddleware, checkUserMiddleware, getUserController)
 router.put(
   '/api/users',
-  createObjectMiddleware(optionalRegistrationSchema),
+  validationMiddleware(optionalRegistrationSchema),
   checkAccessTokenMiddleware,
   checkBodyMiddleware,
   changeUserController
@@ -51,7 +51,7 @@ router.put(
 
 router.put(
   '/api/users/password',
-  createObjectMiddleware(passwordSchema),
+  validationMiddleware(passwordSchema),
   checkAccessTokenMiddleware,
   checkBodyMiddleware,
   changePasswordUserController
