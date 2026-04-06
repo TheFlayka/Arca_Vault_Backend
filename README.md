@@ -1,6 +1,8 @@
 # Arca Vault (Backend) 
 <img width="700" height="200" alt="READMEMarkdownBackend" src="https://github.com/user-attachments/assets/a797bab5-6835-4654-9934-1f5297bf0bdd" />
 
+## ПРОЕКТ НЕ БУДЕТ ДОДЕЛАН
+Этот проект не будет доделан до неизвестного срока. Я переоценил свои усилия и не смогу реализовать такой проект. В будущем проект будет возможно доделан, но на данный момент проект закрыт
 ## Добро пожаловать в репозиторий бэкэнда Arca Vault. 
 
 _(В разделе [Wiki](https://github.com/TheFlayka/Arca_Vault_Backend/wiki) вы найдете больше информаций о репозиторий и бэкэнде)_
